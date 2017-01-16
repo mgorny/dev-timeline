@@ -6,6 +6,9 @@ import json
 import sys
 
 
+MAX_INACTIVITY = datetime.timedelta(days=90).total_seconds()
+
+
 def fdate(ts):
     return datetime.datetime.fromtimestamp(ts, datetime.timezone.utc)
 
@@ -16,14 +19,18 @@ def sdate(ts):
 
 
 class DevRange:
-    def __init__(self):
-        self.min = None
-        self.max = None
+    def __init__(self, minr=None, maxr=None):
+        self.packed_ranges = []
+        self.min = minr
+        self.max = maxr
 
     def add(self, ts):
         if self.min is None: # == self.max is None
             self.min = self.max = ts
         elif ts < self.min:
+            if self.min - ts > MAX_INACTIVITY:
+                self.packed_ranges.append(DevRange(self.min, self.max))
+                self.max = ts
             self.min = ts
         elif ts > self.max:
             self.max = ts
@@ -62,10 +69,11 @@ def main(outpath):
             devs[uid.lower()].add(int(ts))
 
     with open(outpath, 'w') as outf:
-        for d, r in sorted(devs.items(), key=lambda x: x[1].min):
+        for d, bigrange in sorted(devs.items(), key=lambda x: x[1].min):
+            for r in (*bigrange.packed_ranges, bigrange):
 #[ 'dev name' ,new Date(Y, M, D),new Date(Y, M, D) ],
-            outf.write("[ %s, new Date(%d, %d, %d), new Date(%d, %d, %d) ],\n"
-                    % (repr(d), *sdate(r.min), *sdate(r.max)))
+                outf.write("[ %s, new Date(%d, %d, %d), new Date(%d, %d, %d) ],\n"
+                        % (repr(d), *sdate(r.min), *sdate(r.max)))
 
     return 0
 
