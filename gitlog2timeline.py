@@ -10,6 +10,11 @@ def fdate(ts):
     return datetime.datetime.fromtimestamp(ts, datetime.timezone.utc)
 
 
+def sdate(ts):
+    d = fdate(ts)
+    return (d.year, d.month, d.day)
+
+
 class DevRange:
     def __init__(self):
         self.min = None
@@ -52,7 +57,9 @@ def main(outpath):
 
     with open(outpath, 'w') as outf:
         for d, r in sorted(devs.items(), key=lambda x: x[1].min):
-            outf.write('%s\t%s\t%s\n' % (d, fdate(r.min), fdate(r.max)))
+#[ 'dev name' ,new Date(Y, M, D),new Date(Y, M, D) ],
+            outf.write("[ %s, new Date(%d, %d, %d), new Date(%d, %d, %d) ],\n"
+                    % (repr(d), *sdate(r.min), *sdate(r.max)))
 
     return 0
 
