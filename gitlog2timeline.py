@@ -51,7 +51,7 @@ def main(outpath):
         devs[uid].add(int(ts))
 
     with open(outpath, 'w') as outf:
-        for d, r in devs.items():
+        for d, r in sorted(devs.items(), key=lambda x: x[1].min):
             outf.write('%s\t%s\t%s\n' % (d, fdate(r.min), fdate(r.max)))
 
     return 0
