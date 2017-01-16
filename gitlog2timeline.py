@@ -2,6 +2,7 @@
 
 import collections
 import datetime
+import json
 import sys
 
 
@@ -29,12 +30,25 @@ class DevRange:
 def main(outpath):
     devs = collections.defaultdict(DevRange)
 
+    with open('aliases.json') as f:
+        aliases = json.load(f)
+
     for l in sys.stdin:
         spl = l.split()
         if len(spl) < 3: # some entries lack e-mail, for some reason
             continue
         h, ts, email = spl
-        devs[email].add(int(ts))
+        # map from email to canonical dev name
+        # (including alternate aliases, emails)
+        if email in aliases:
+            uid = aliases[email]
+        # devs not in LDAP?
+        elif email.endswith('@gentoo.org'):
+            uid = email[:-len('@gentoo.org')]
+        # let's skip everyone else, for now
+        else:
+            continue
+        devs[uid].add(int(ts))
 
     with open(outpath, 'w') as outf:
         for d, r in devs.items():
