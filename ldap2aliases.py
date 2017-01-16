@@ -19,6 +19,7 @@ def main(list_f='aliases.ldif', aliases_json='aliases.json'):
         mails = set()
         for l in block.splitlines():
             k, v = l.split(': ')
+            v = v.lower()
             if k == 'uid':
                 uid = v
                 mails.add(v + '@gentoo.org')

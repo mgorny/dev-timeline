@@ -40,20 +40,26 @@ def main(outpath):
 
     for l in sys.stdin:
         spl = l.split()
-        if len(spl) < 3: # some entries lack e-mail, for some reason
+        if len(spl) < 4: # some entries lack e-mail, for some reason
             continue
-        h, ts, email = spl
-        # map from email to canonical dev name
-        # (including alternate aliases, emails)
-        if email in aliases:
-            uid = aliases[email]
-        # devs not in LDAP?
-        elif email.endswith('@gentoo.org'):
-            uid = email[:-len('@gentoo.org')]
-        # let's skip everyone else, for now
-        else:
-            continue
-        devs[uid].add(int(ts))
+        h, ts, cemail, aemail = spl
+        # use both committer & author:
+        # - committer indicates developer activity (to merge stuff)
+        # - author to 'fill' bars of pull request authors who became
+        #   developers
+        mails = set((cemail.lower(), aemail.lower()))
+        for m in mails:
+            # map from email to canonical dev name
+            # (including alternate aliases, emails)
+            if m in aliases:
+                uid = aliases[m]
+            # devs not in LDAP?
+            elif m.endswith('@gentoo.org'):
+                uid = m[:-len('@gentoo.org')]
+            # let's skip everyone else, for now
+            else:
+                continue
+            devs[uid.lower()].add(int(ts))
 
     with open(outpath, 'w') as outf:
         for d, r in sorted(devs.items(), key=lambda x: x[1].min):
