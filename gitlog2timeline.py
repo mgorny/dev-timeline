@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import argparse
 import collections
 import datetime
 import json
@@ -39,13 +40,26 @@ class DevRange:
         return 'DevRange(%s, %s)' % (fdate(self.min), fdate(self.max))
 
 
-def main(outpath):
+def main():
+    argp = argparse.ArgumentParser()
+
+    argp.add_argument('--ldap-only', action='store_true',
+        help='Ignore developers that are not present in LDAP')
+
+    argp.add_argument('input', type=argparse.FileType('r'),
+        help='Input file (output of git --format="%%H %%ct %%ce %%ae")')
+    argp.add_argument('output', type=argparse.FileType('w'),
+        help='Output file')
+    argp.add_argument('aliases_json', type=argparse.FileType('r'),
+        help='Aliases JSON file')
+
+    vals = argp.parse_args()
+
     devs = collections.defaultdict(DevRange)
+    aliases = json.load(vals.aliases_json)
 
-    with open('aliases.json') as f:
-        aliases = json.load(f)
-
-    for l in sys.stdin:
+    # --format='%H %ct %ce %ae'
+    for l in vals.input:
         spl = l.split()
         if len(spl) < 4: # some entries lack e-mail, for some reason
             continue
@@ -61,22 +75,21 @@ def main(outpath):
             if m in aliases:
                 uid = aliases[m]
             # devs not in LDAP?
-            elif m.endswith('@gentoo.org'):
+            elif m.endswith('@gentoo.org') and not vals.ldap_only:
                 uid = m[:-len('@gentoo.org')]
             # let's skip everyone else, for now
             else:
                 continue
             devs[uid.lower()].add(int(ts))
 
-    with open(outpath, 'w') as outf:
-        for d, bigrange in sorted(devs.items(), key=lambda x: x[1].min):
-            for r in (*bigrange.packed_ranges, bigrange):
+    for d, bigrange in sorted(devs.items(), key=lambda x: x[1].min):
+        for r in (*bigrange.packed_ranges, bigrange):
 #[ 'dev name' ,new Date(Y, M, D),new Date(Y, M, D) ],
-                outf.write("[ %s, new Date(%d, %d, %d), new Date(%d, %d, %d) ],\n"
-                        % (repr(d), *sdate(r.min), *sdate(r.max)))
+            vals.output.write("[ %s, new Date(%d, %d, %d), new Date(%d, %d, %d) ],\n"
+                    % (repr(d), *sdate(r.min), *sdate(r.max)))
 
     return 0
 
 
 if __name__ == '__main__':
-    sys.exit(main(*sys.argv[1:]))
+    sys.exit(main())
