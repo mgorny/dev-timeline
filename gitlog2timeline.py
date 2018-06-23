@@ -36,6 +36,17 @@ class DevRange:
         elif ts > self.max:
             self.max = ts
 
+    @property
+    def earliest(self):
+        return self.min
+
+    @property
+    def latest(self):
+        if self.packed_ranges:
+            return self.packed_ranges[0].max
+        else:
+            return self.max
+
     def __repr__(self):
         return 'DevRange(%s, %s)' % (fdate(self.min), fdate(self.max))
 
@@ -43,8 +54,16 @@ class DevRange:
 def main():
     argp = argparse.ArgumentParser()
 
-    argp.add_argument('--ldap-only', action='store_true',
+    argp.add_argument('--ldap-only', action='store_true', default=False,
         help='Ignore developers that are not present in LDAP')
+
+    sortg = argp.add_mutually_exclusive_group()
+    sortg.add_argument('--sort-earliest', action='store_true',
+        help='Sort by earliest commit date')
+    sortg.add_argument('--sort-latest', action='store_true',
+        help='Sort by most recent commit date')
+    sortg.add_argument('--sort-name', action='store_true',
+        help='Sort by developer name')
 
     argp.add_argument('input', type=argparse.FileType('r'),
         help='Input file (output of git --format="%%H %%ct %%ce %%ae")')
@@ -82,7 +101,14 @@ def main():
                 continue
             devs[uid.lower()].add(int(ts))
 
-    for d, bigrange in sorted(devs.items(), key=lambda x: x[1].min):
+    if vals.sort_latest:
+        sort_key = lambda x: x[1].latest
+    elif vals.sort_name:
+        sort_key = lambda x: x[0]
+    else:  # vals.sort_earliest
+        sort_key = lambda x: x[1].earliest
+
+    for d, bigrange in sorted(devs.items(), key=sort_key):
         for r in (*bigrange.packed_ranges, bigrange):
 #[ 'dev name' ,new Date(Y, M, D),new Date(Y, M, D) ],
             vals.output.write("[ %s, new Date(%d, %d, %d), new Date(%d, %d, %d) ],\n"
