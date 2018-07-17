@@ -7,6 +7,14 @@ TMPDIR = .
 
 all: $(OUTDIR)/dev-timeline.html $(OUTDIR)/active-devs.html
 
+fetch: $(PORTDIR)/.git
+	cd $(PORTDIR) && git fetch
+
+qa-run:
+	+$(MAKE) fetch
+	+$(MAKE) all
+	+$(MAKE) clean
+
 $(OUTDIR)/dev-timeline.html: $(TMPDIR)/data-all-devs.txt $(BINDIR)/timeline.html.cpp
 	cpp -P -DTITLE="Historical dev commit timeline:" \
 		-DDATE=$$(date +%Y-%m-%d) \
@@ -42,4 +50,4 @@ clean:
 distclean: clean
 	rm -f $(OUTDIR)/dev-timeline.html $(OUTDIR)/active-devs.html
 
-.PHONY: all clean distclean
+.PHONY: all clean distclean fetch qa-run
