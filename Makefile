@@ -1,22 +1,22 @@
 PORTDIR ?= $(shell portageq get_repo_path / gentoo)
 
-all: out.txt active-out.txt
+all: data-all-devs.txt data-active-devs.txt
 
-out.txt: aliases.json
+data-all-devs.txt: aliases-all-devs.json
 	( cd $(PORTDIR) && git log --format='%H %ct %ce %ae' ) | ./gitlog2timeline.py --sort-earliest - $@ $<
-active-out.txt: active-aliases.json
+data-active-devs.txt: aliases-active-devs.json
 	( cd $(PORTDIR) && git log --format='%H %ct %ce %ae' ) | ./gitlog2timeline.py --sort-latest --ldap-only - $@ $<
 
 %.json: %.ldif
 	./ldap2aliases.py $< $@
 
-aliases.ldif:
+aliases-all-devs.ldif:
 	ssh dev.gentoo.org "ldapsearch '(gentooStatus=*)' -Z uid mail gentooAlias -LLL" > $@
-active-aliases.ldif:
+aliases-active-devs.ldif:
 	ssh dev.gentoo.org "ldapsearch '(gentooStatus=active)' -Z uid mail gentooAlias -LLL" > $@
 
 clean:
-	rm -f aliases.ldif aliases.json out.txt
-	rm -f active-aliases.ldif active-aliases.json active-out.txt
+	rm -f aliases-all-devs.ldif aliases-all-devs.json data-all-devs.txt
+	rm -f aliases-active-devs.ldif aliases-active-devs.json data-active-devs.txt
 
 .PHONY: clean
