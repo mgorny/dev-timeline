@@ -1,4 +1,6 @@
 PORTDIR ?= $(shell portageq get_repo_path / gentoo)
+LDAP_SHELL = sh -c
+#LDAP_SHELL = ssh dev.gentoo.org
 
 all: dev-timeline.html active-devs.html
 
@@ -22,9 +24,9 @@ data-active-devs.txt: aliases-active-devs.json
 	./ldap2aliases.py $< $@
 
 aliases-all-devs.ldif:
-	ssh dev.gentoo.org "ldapsearch '(gentooStatus=*)' -Z uid mail gentooAlias -LLL" > $@
+	$(LDAP_SHELL) "ldapsearch '(gentooStatus=*)' -Z uid mail gentooAlias -LLL" > $@
 aliases-active-devs.ldif:
-	ssh dev.gentoo.org "ldapsearch '(gentooStatus=active)' -Z uid mail gentooAlias -LLL" > $@
+	$(LDAP_SHELL) "ldapsearch '(gentooStatus=active)' -Z uid mail gentooAlias -LLL" > $@
 
 clean:
 	rm -f dev-timeline.html aliases-all-devs.ldif aliases-all-devs.json data-all-devs.txt
