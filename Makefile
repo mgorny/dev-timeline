@@ -7,7 +7,7 @@ TMPDIR = .
 
 all: $(OUTDIR)/dev-timeline.html $(OUTDIR)/active-devs.html
 
-fetch: $(PORTDIR)/.git
+fetch: $(PORTDIR)
 	cd $(PORTDIR) && git fetch
 
 qa-run:
