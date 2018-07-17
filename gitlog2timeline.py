@@ -20,8 +20,9 @@ def sdate(ts):
 
 
 class DevRange:
-    def __init__(self, minr=None, maxr=None):
+    def __init__(self, minr=None, maxr=None, count=0):
         self.packed_ranges = []
+        self.count = count
         self.min = minr
         self.max = maxr
 
@@ -30,11 +31,13 @@ class DevRange:
             self.min = self.max = ts
         elif ts < self.min:
             if self.min - ts > MAX_INACTIVITY:
-                self.packed_ranges.append(DevRange(self.min, self.max))
+                self.packed_ranges.append(DevRange(self.min, self.max, self.count))
                 self.max = ts
+                self.count = 0
             self.min = ts
         elif ts > self.max:
             self.max = ts
+        self.count += 1
 
     @property
     def earliest(self):
@@ -110,9 +113,9 @@ def main():
 
     for d, bigrange in sorted(devs.items(), key=sort_key):
         for r in (*bigrange.packed_ranges, bigrange):
-#[ 'dev name' ,new Date(Y, M, D),new Date(Y, M, D) ],
-            vals.output.write("[ %s, new Date(%d, %d, %d), new Date(%d, %d, %d) ],\n"
-                    % (repr(d), *sdate(r.min), *sdate(r.max)))
+#[ 'dev name', '%d commits' ,new Date(Y, M, D),new Date(Y, M, D) ],
+            vals.output.write("[ %s, '%d commits', new Date(%d, %d, %d), new Date(%d, %d, %d) ],\n"
+                    % (repr(d), r.count, *sdate(r.min), *sdate(r.max)))
 
     return 0
 
