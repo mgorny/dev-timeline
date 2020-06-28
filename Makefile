@@ -42,9 +42,9 @@ $(OUTDIR)/active-devs.json: $(TMPDIR)/aliases-active-devs.json
 	$(BINDIR)/ldap2aliases.py $< $@
 
 $(TMPDIR)/aliases-all-devs.ldif:
-	$(LDAP_SHELL) "ldapsearch '(gentooStatus=*)' -Z uid mail gentooAlias -LLL" > $@
+	$(LDAP_SHELL) "ldapsearch '(gentooStatus=*)' -x -Z uid mail gentooAlias -LLL" > $@
 $(TMPDIR)/aliases-active-devs.ldif:
-	$(LDAP_SHELL) "ldapsearch '(&(gentooAccess=git.gentoo.org/repo/gentoo.git)(gentooStatus=active))' -Z uid mail gentooAlias -LLL" > $@
+	$(LDAP_SHELL) "ldapsearch '(&(gentooAccess=git.gentoo.org/repo/gentoo.git)(gentooStatus=active))' -x -Z uid mail gentooAlias -LLL" > $@
 
 clean:
 	rm -f $(TMPDIR)/aliases-all-devs.ldif \
