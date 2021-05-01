@@ -12,7 +12,7 @@ def fdate(ts):
 
 def sdate(ts):
     d = fdate(ts)
-    return (d.year, d.month, d.day)
+    return (d.year, d.month - 1, d.day)
 
 
 def main():
