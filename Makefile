@@ -32,10 +32,10 @@ $(TMPDIR)/data-active-devs.txt: $(OUTDIR)/active-devs.json
 	$(BINDIR)/json2timeline.py $< $@
 
 $(OUTDIR)/dev-timeline.json: $(TMPDIR)/aliases-all-devs.json
-	( cd $(PORTDIR) && git log --format='%H %ct %ce %ae' ) | $(BINDIR)/gitlog2json.py --sort-earliest - $(TMPDIR)/dev-timeline.json.tmp $<
+	( cd $(PORTDIR) && git log --format='%H%x00%ct%x00%ce%x00%ae' ) | $(BINDIR)/gitlog2json.py --sort-earliest - $(TMPDIR)/dev-timeline.json.tmp $<
 	mv $(TMPDIR)/dev-timeline.json.tmp $@
 $(OUTDIR)/active-devs.json: $(TMPDIR)/aliases-active-devs.json
-	( cd $(PORTDIR) && git log --format='%H %ct %ce %ae' ) | $(BINDIR)/gitlog2json.py --sort-latest --ldap-only - $(TMPDIR)/active-devs.json.tmp $<
+	( cd $(PORTDIR) && git log --format='%H%x00%ct%x00%ce%x00%ae' ) | $(BINDIR)/gitlog2json.py --sort-latest --ldap-only - $(TMPDIR)/active-devs.json.tmp $<
 	mv $(TMPDIR)/active-devs.json.tmp $@
 
 %.json: %.ldif

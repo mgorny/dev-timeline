@@ -73,7 +73,7 @@ def main():
 
     # --format='%H %ct %ce %ae'
     for l in vals.input:
-        spl = l.split()
+        spl = l.split('\0')
         if len(spl) < 4: # some entries lack e-mail, for some reason
             continue
         h, ts, cemail, aemail = spl
